@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import re
 
 def replace_math_symbols(text):
