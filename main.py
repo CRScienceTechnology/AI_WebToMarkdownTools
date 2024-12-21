@@ -1,7 +1,7 @@
 # -*- coding: GBK -*-
 import sys
 import re
-from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QLineEdit, QTextEdit, QPushButton
+from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QTextEdit, QPushButton
 
 def replace_math_symbols(text):
     ### Notice： 下面两组不能倒过来，否则会替换不完全，按照由严格到宽松的替换原则
@@ -32,6 +32,7 @@ class MathSymbolReplacerApp(QWidget):
         # 输入框
         self.input_text = QTextEdit(self)
         self.input_text.setPlaceholderText("在这里输入包含数学符号的文本...")
+        self.input_text.setAcceptRichText(False)  # 禁用富文本，处理纯文本
         self.layout.addWidget(self.input_text)
 
         # 按钮
@@ -42,6 +43,7 @@ class MathSymbolReplacerApp(QWidget):
         # 输出框
         self.output_text = QTextEdit(self)
         self.output_text.setPlaceholderText("替换后的文本将显示在这里...")
+        self.output_text.setAcceptRichText(False)  # 禁用富文本，处理纯文本
         self.output_text.setReadOnly(True)
         self.layout.addWidget(self.output_text)
 
