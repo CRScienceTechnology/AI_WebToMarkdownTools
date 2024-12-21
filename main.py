@@ -1,102 +1,67 @@
 # -*- coding: GBK -*-
+import sys
 import re
+from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QLineEdit, QTextEdit, QPushButton
 
 def replace_math_symbols(text):
-    # 替换 \( 和 \) 为 $
+    ### Notice： 下面两组不能倒过来，否则会替换不完全，按照由严格到宽松的替换原则
+    # 替换\( 和 \)为 $
+    text = re.sub(r'\\\( ', r'$', text)
+    text = re.sub(r' \\\)', r'$', text)
+    # 替换\(和\)为 $
     text = re.sub(r'\\\(', r'$', text)
     text = re.sub(r'\\\)', r'$', text)
-    
-    # 替换 \[ 和 \] 为 $$
+
+    # 替换\[和\]为 $$
     text = re.sub(r'\\\[\s*', r'$$', text)
     text = re.sub(r'\s*\\\]', r'$$', text)
     
     return text
 
-# 示例文本
-input_text = r"""## 题目
+class MathSymbolReplacerApp(QWidget):
+    def __init__(self):
+        super().__init__()
 
-在标准状态下，若氧气（视为刚性双原子分子）和氮气的理想气体的体积比为 \( V_1 / V_2 = 1 / 2 \)，则其内能之比 \( E_1 / E_2 \) 为：
+        # 设置窗口标题和大小
+        self.setWindowTitle("数学符号替换工具")
+        self.setGeometry(200, 200, 600, 400)
 
-- A. \( \frac{3}{10} \)  
-- B. \( \frac{1}{2} \)  
-- C. \( \frac{5}{6} \)  
-- D. \( \frac{5}{3} \)
+        # 创建布局
+        self.layout = QVBoxLayout()
 
----
+        # 输入框
+        self.input_text = QTextEdit(self)
+        self.input_text.setPlaceholderText("在这里输入包含数学符号的文本...")
+        self.layout.addWidget(self.input_text)
 
-## 解题过程
+        # 按钮
+        self.replace_button = QPushButton("替换符号", self)
+        self.replace_button.clicked.connect(self.on_replace_clicked)
+        self.layout.addWidget(self.replace_button)
 
-### 1. 内能公式
-对于理想气体，内能 \( E \) 与温度 \( T \)、自由度 \( f \)、摩尔数 \( n \) 有关，公式为：
+        # 输出框
+        self.output_text = QTextEdit(self)
+        self.output_text.setPlaceholderText("替换后的文本将显示在这里...")
+        self.output_text.setReadOnly(True)
+        self.layout.addWidget(self.output_text)
 
-\[
-E = \frac{f}{2} nRT
-\]
+        # 设置布局
+        self.setLayout(self.layout)
 
-其中：
-- \( f \)：气体分子的自由度  
-- \( n \)：气体的摩尔数  
-- \( R \)：理想气体常数  
-- \( T \)：气体温度  
+    def on_replace_clicked(self):
+        # 获取输入文本
+        input_text = self.input_text.toPlainText()
+        
+        # 替换数学符号
+        output_text = replace_math_symbols(input_text)
 
-对于**双原子分子**（如氧气、氮气），自由度为 \( f = 5 \)。
+        # 设置输出框的文本
+        self.output_text.setPlainText(output_text)
 
----
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
 
-### 2. 体积与摩尔数的关系
-根据理想气体方程 \( PV = nRT \)，在**相同温度** \( T \) 和**相同压强** \( P \) 下，气体的摩尔数 \( n \) 与体积 \( V \) 成正比：
+    window = MathSymbolReplacerApp()
+    window.show()
 
-\[
-n \propto V
-\]
-
-已知体积比：
-
-\[
-\frac{V_1}{V_2} = \frac{1}{2}
-\]
-
-因此：
-
-\[
-\frac{n_1}{n_2} = \frac{V_1}{V_2} = \frac{1}{2}
-\]
-
----
-
-### 3. 内能之比 \( E_1 / E_2 \)
-由于氧气和氮气的自由度 \( f \) 相同（\( f = 5 \)），内能之比可简化为：
-
-\[
-\frac{E_1}{E_2} = \frac{\frac{f}{2} n_1RT}{\frac{f}{2} n_2RT}
-\]
-
-其中 \( f \)、\( R \)、\( T \) 都相同，约去这些项，得到：
-
-\[
-\frac{E_1}{E_2} = \frac{n_1}{n_2}
-\]
-
-将 \( \frac{n_1}{n_2} = \frac{1}{2} \) 代入，得到：
-
-\[
-\frac{E_1}{E_2} = \frac{1}{2}
-\]
-
----
-
-## 答案
-通过以上推导，内能之比为：
-
-\[
-\frac{E_1}{E_2} = \frac{1}{2}
-\]
-
-但题目给出的正确答案是 **C: \( \frac{5}{6} \)**，这可能涉及更复杂的热容修正或物理假设。
-"""
-
-# 执行替换
-output_text = replace_math_symbols(input_text)
-
-# 输出结果
-print(output_text)
+    sys.exit(app.exec())
