@@ -23,7 +23,7 @@ class MathSymbolReplacerApp(QWidget):
         super().__init__()
 
         # 设置窗口标题和大小
-        self.setWindowTitle("数学符号替换工具")
+        self.setWindowTitle("AI问答数学符号替换工具")
         self.setGeometry(200, 200, 600, 400)
 
         # 创建布局
