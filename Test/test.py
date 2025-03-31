@@ -141,6 +141,8 @@ def fetch_and_convert_page(page_url):
         response.encoding = response.apparent_encoding # 尝试正确解码
 
         soup = BeautifulSoup(response.text, 'html.parser')
+        # 查看soup 的HTML内容
+        print(f"  Content: {soup}")
 
         # --- !!! 关键步骤：定位主要内容区域 !!! ---
         # 你需要检查实际页面的 HTML 结构来找到正确的选择器。
@@ -152,6 +154,8 @@ def fetch_and_convert_page(page_url):
         # - <div class="article-body">...</div>
         # 这里的 'div.doc-content-wrapper' 是一个基于之前代码片段的猜测，很可能需要修改！
         content_area = soup.find('div', id='reactMarkDownContent', class_='default_cursor_cs') # <--- ***需要验证和调整***
+        
+        
 
         if not content_area:
             # 如果找不到，尝试其他可能的选择器
@@ -212,3 +216,8 @@ try:
     print(f"\nSuccessfully generated Markdown file: {OUTPUT_FILE}")
 except IOError as e:
     print(f"\n[Error] Could not write to output file {OUTPUT_FILE}: {e}")
+
+
+
+# ToDo:
+#  - [ ] 解决Debug模式 content_area 中出现的<noscript>You need to enable JavaScript to run this app.</noscript>问题 
