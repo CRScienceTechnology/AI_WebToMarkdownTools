@@ -235,6 +235,7 @@ except IOError as e:
 
 
 # ToDo:
-#  - [ ] 解决Debug模式 content_area 中出现的<noscript>You need to enable JavaScript to run this app.</noscript>问题 
+#  - [x] 解决Debug模式 content_area 中出现的<noscript>You need to enable JavaScript to run this app.</noscript>问题 
+#  - [ ] 解决打开ChromeDriver时总是打开一个连接为data;的无效页面
 # Learned:
 # 1. 有些 div标签内容 是通过 JavaScript 动态加载的，不能够直接被获取，参见此对话 https://g.co/gemini/share/dedafca84e03
