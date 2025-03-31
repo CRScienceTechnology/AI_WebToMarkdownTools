@@ -1,9 +1,28 @@
+import logging
 import requests
 from bs4 import BeautifulSoup
 from markdownify import markdownify
 from urllib.parse import urljoin
 import time
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from webdriver_manager.chrome import ChromeDriverManager
+import time
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from webdriver_manager.chrome import ChromeDriverManager
+from bs4 import BeautifulSoup
+import logging
 import os
+
+
+
 
 # --- 配置 ---
 # 基础 URL (根据之前的 HTML 注释推断)
@@ -15,6 +34,12 @@ OUTPUT_FILE = "xiaomi_iot_documentation.md"
 
 # 延时（秒），避免过于频繁访问服务器
 REQUEST_DELAY = 1
+
+
+# 设置代理（如果需要）
+os.environ['HTTP_PROXY'] = 'http://127.0.0.1:7890'
+os.environ['HTTPS_PROXY'] = 'http://127.0.0.1:7890'
+
 
 # --- 从之前提供的 HTML 中提取的结构 ---
 # 注意：这里的 URL 是相对路径，需要与 BASE_URL 拼接
@@ -127,49 +152,36 @@ documentation_structure = [
 
 # --- 爬虫函数 ---
 def fetch_and_convert_page(page_url):
+    """使用 Selenium 获取动态加载的内容"""
+    # 使用 webdriver_manager 自动管理 ChromeDriver
+    service = Service(ChromeDriverManager().install())
+    driver = webdriver.Chrome(service=service)
+
     """获取单个页面的 HTML，提取内容并转换为 Markdown"""
     absolute_url = urljoin(BASE_URL, page_url)
     print(f"  Fetching: {absolute_url}")
     try:
-        # 显式传入空的 proxies 字典来禁用代理
-        proxies = {
-          "http": None,
-          "https": None,
-        }
-        response = requests.get(absolute_url, timeout=15,proxies=proxies)
-        response.raise_for_status()  # 检查 HTTP 错误 (如 404, 500)
-        response.encoding = response.apparent_encoding # 尝试正确解码
+        # 使用 webdriver_manager 自动管理 ChromeDriver
+        service = Service(ChromeDriverManager().install())
+        driver = webdriver.Chrome(service=service)
 
-        soup = BeautifulSoup(response.text, 'html.parser')
-        # 查看soup 的HTML内容
-        print(f"  Content: {soup}")
+        driver.get(absolute_url)
+        logging.info(f"Opened URL: {absolute_url}")
+        # 使用显式等待代替固定时间的 sleep
+        wait = WebDriverWait(driver, 20)
+        # 等待页面加载完成
+        time.sleep(3)
 
-        # --- !!! 关键步骤：定位主要内容区域 !!! ---
-        # 你需要检查实际页面的 HTML 结构来找到正确的选择器。
-        # 常见的可能性包括：
-        # - <main>...</main>
-        # - <article>...</article>
-        # - <div id="content">...</div>
-        # - <div class="main-content">...</div>
-        # - <div class="article-body">...</div>
-        # 这里的 'div.doc-content-wrapper' 是一个基于之前代码片段的猜测，很可能需要修改！
-        content_area = soup.find('div', id='reactMarkDownContent', class_='default_cursor_cs') # <--- ***需要验证和调整***
-        
-        
+        content_area = wait.until(EC.presence_of_element_located((By.ID, 'reactMarkDownContent')))
 
-        if not content_area:
-            # 如果找不到，尝试其他可能的选择器
-            content_area = soup.find('main')
-            if not content_area:
-                 content_area = soup.find('article')
-                 # 可以添加更多备选方案
-            
+        # 获取渲染后的 HTML
+        html = driver.page_source
+        soup = BeautifulSoup(html, 'html.parser')
+
+        # 查找目标内容
+        content_area = soup.find('div', id='reactMarkDownContent')
 
         if content_area:
-            # 清理可能不需要的部分（如导航按钮、编辑链接等），可选
-            # for unwanted in content_area.find_all(['button', '.edit-link']):
-            #     unwanted.decompose()
-
             html_content = str(content_area)
             # 转换为 Markdown，ATX 风格的标题 (#, ##)
             markdown_content = markdownify(html_content, heading_style="ATX").strip()
@@ -184,6 +196,9 @@ def fetch_and_convert_page(page_url):
     except Exception as e:
         print(f"  [Error] Processing error for {absolute_url}: {e}")
         return f"*Error processing page: {e}*"
+    finally:
+        driver.quit()
+        logging.info("Browser closed.")
 
 # --- 主逻辑 ---
 final_markdown = f"# {BASE_URL} Documentation\n\n"
@@ -221,3 +236,5 @@ except IOError as e:
 
 # ToDo:
 #  - [ ] 解决Debug模式 content_area 中出现的<noscript>You need to enable JavaScript to run this app.</noscript>问题 
+# Learned:
+# 1. 有些 div标签内容 是通过 JavaScript 动态加载的，不能够直接被获取，参见此对话 https://g.co/gemini/share/dedafca84e03
