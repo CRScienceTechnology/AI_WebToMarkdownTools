@@ -1,3 +1,5 @@
+# 测试解决浏览器的动态加载内容的问题，使用Selenium和BeautifulSoup库
+
 import time
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
